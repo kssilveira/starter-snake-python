@@ -75,6 +75,7 @@ class Game(object):
 
     you = data['you']
     body = you['body']
+    self.health = you['health']
     self.head = body[0]
     for part in body:
       self.board[part['y']][part['x']] = 1
@@ -152,17 +153,22 @@ def move():
     print 'board'
     pprint.pprint(game.board)
 
-    distances, moves = game.distances(game.head['x'], game.head['y'])
-
-    print 'distances'
-    pprint.pprint(distances)
-
-    # print 'moves'
-    # pprint.pprint(moves)
-
     # import pdb; pdb.set_trace()
 
-    return move_response(game.move_to_food(distances, moves))
+    direction = game.move_to_free()
+
+    if game.health <= 50:
+      distances, moves = game.distances(game.head['x'], game.head['y'])
+
+      print 'distances'
+      pprint.pprint(distances)
+
+      # print 'moves'
+      # pprint.pprint(moves)
+
+      direction = game.move_to_food(distances, moves)
+
+    return move_response(direction)
 
 @bottle.post('/end')
 def end():
