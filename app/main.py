@@ -1,7 +1,9 @@
+import collections
 import json
 import os
 import pprint
 import random
+import sys
 
 import bottle
 
@@ -60,10 +62,18 @@ DELTAS = {
 
 class Game(object):
 
-  def __init__(self, board, width, height):
-    self.board = board
-    self.width = width
-    self.height = height
+  def __init__(self, data):
+    board_data = data['board']
+
+    self.height = board_data['height']
+    self.width = board_data['width']
+    self.board = [[0 for _ in range(self.width)] for _ in range(self.height)]
+
+    you = data['you']
+    body = you['body']
+    self.head = body[0]
+    for part in body:
+      self.board[part['y']][part['x']] = 1
 
   def adjacent(self, x, y):
     res = []
@@ -73,6 +83,24 @@ class Game(object):
       ny = y + delta['y']
       if nx >= 0 and nx < self.width and ny >= 0 and ny < self.height and self.board[ny][nx] == 0:
         res.append((direction, nx, ny))
+    return res
+
+  def distances(self, x, y):
+    res = [[-1 for _ in range(self.width)] for _ in range(self.height)]
+    # Flood fill.
+    deque = collections.deque([(x, y, 0)])
+    while deque:
+      (x, y, d) = deque.popleft()
+      if res[y][x] != -1:
+        continue
+      res[y][x] = d
+      # print 'x', x, 'y', y, 'd', d
+      # print 'res'
+      # pprint.pprint(res)
+      # import pdb; pdb.set_trace()
+      for (_, nx, ny) in self.adjacent(x, y):
+        if res[ny][nx] == -1:
+          deque.append((nx, ny, d + 1))
     return res
 
 @bottle.post('/move')
@@ -88,27 +116,19 @@ def move():
     print 'data'
     pprint.pprint(data)
 
-    board_data = data['board']
-    height = board_data['height']
-    width = board_data['width']
-
-    board = [[0 for _ in range(width)] for _ in range(height)]
-
-    you = data['you']
-    body = you['body']
-    head = body[0]
-    for part in body:
-      board[part['y']][part['x']] = 1
+    game = Game(data)
 
     print 'board'
-    pprint.pprint(board)
+    pprint.pprint(game.board)
 
-    game = Game(board, width, height)
+    distances = game.distances(game.head['x'], game.head['y'])
+
+    print 'distances'
+    pprint.pprint(distances)
 
     # import pdb; pdb.set_trace()
-    # direction = random.choice(directions)
 
-    res = game.adjacent(head['x'], head['y'])
+    res = game.adjacent(game.head['x'], game.head['y'])
 
     if len(res) > 0:
       direction, nx, ny = res[0]
