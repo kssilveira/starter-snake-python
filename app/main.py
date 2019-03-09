@@ -46,7 +46,7 @@ def start():
     print "start()"
     print(json.dumps(data))
 
-    previous_tails[data['you']['id']] = []
+    previous_tails[data['you']['id']] = {'x': 0, 'y': 0}
 
     color = "#00FF00"
 
@@ -167,7 +167,8 @@ class Game(object):
       x = food['x']
       y = food['y']
       dist = distances[y][x]
-      if dist != NO_DISTANCE and (dist < mindist) and tail_distances[y][x] != NO_DISTANCE:
+      if dist != NO_DISTANCE and (dist < mindist) and (
+        tail_distances[y][x] != NO_DISTANCE or self.health <= 25):
         mindist = dist
         res = moves[y][x]
     print 'move_to_food', 'mindist', mindist, 'res', res
@@ -202,11 +203,8 @@ def run(data, exclude_heads_of_other_snakes):
     # print 'moves'
     # pprint.pprint(moves)
 
-    previous_tails[game.id].append(game.tail)
-    if len(previous_tails[game.id]) > 10:
-      previous_tails[game.id] = previous_tails[game.id][-10:]
 
-    for tail in reversed(previous_tails[game.id]):
+    for tail in (game.tail, previous_tails[game.id]):
       direction = game.move_to_pos(tail['x'], tail['y'], moves)
       if direction != NO_MOVE:
         break
@@ -217,6 +215,10 @@ def run(data, exclude_heads_of_other_snakes):
       if food_direction != NO_MOVE:
         direction = food_direction
     print 'move_response', 'dir', direction
+
+    if game.tail != previous_tails[game.id]:
+      previous_tails[game.id] = game.tail
+
     return direction
 
 @bottle.post('/move')
