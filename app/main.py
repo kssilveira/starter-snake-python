@@ -143,7 +143,7 @@ class Game(object):
     return res
 
   def move_to_food(self, distances, moves):
-    res = 'up'
+    res = NO_MOVE
     mindist = sys.maxint
     for food in self.food:
       x = food['x']
@@ -186,7 +186,9 @@ def move():
     if direction == NO_MOVE:
       direction = game.move_to_max(distances, moves)
     if game.health <= 50:
-      direction = game.move_to_food(distances, moves)
+      food_direction = game.move_to_food(distances, moves)
+      if food_direction != NO_MOVE:
+        direction = food_direction
     return move_response(direction)
 
 @bottle.post('/end')
