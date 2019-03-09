@@ -196,6 +196,9 @@ def move():
     # pprint.pprint(moves)
 
     previous_tails.append(game.tail)
+    if len(previous_tails) > 10:
+      global previous_tails
+      previous_tails = previous_tails[-10:]
 
     for tail in reversed(previous_tails):
       direction = game.move_to_pos(tail['x'], tail['y'], moves)
@@ -208,9 +211,6 @@ def move():
       if food_direction != NO_MOVE:
         direction = food_direction
     print 'move_response', 'dir', direction
-
-    global previous_tail
-    previous_tail = game.tail
 
     return move_response(direction)
 
