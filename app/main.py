@@ -46,8 +46,6 @@ def start():
     print "start()"
     print(json.dumps(data))
 
-    previous_tails[data['you']['id']] = {'x': 0, 'y': 0}
-
     color = "#00FF00"
 
     return start_response(color)
@@ -64,8 +62,6 @@ DELTAS = {
 
 NO_DISTANCE = -1
 NO_MOVE = '?'
-
-previous_tails = {}
 
 class Game(object):
 
@@ -179,9 +175,6 @@ def run(data, exclude_heads_of_other_snakes):
 
     game = Game(data, exclude_heads_of_other_snakes)
 
-    print 'previous_tails', previous_tails
-    print 'previous_tails[id]', previous_tails[game.id]
-
     print 'board'
     pprint.pprint(game.board)
 
@@ -204,8 +197,9 @@ def run(data, exclude_heads_of_other_snakes):
     # pprint.pprint(moves)
 
 
-    for tail in (game.tail, previous_tails[game.id]):
-      direction = game.move_to_pos(tail['x'], tail['y'], moves)
+    tails = [(_, game.tail['x'], game.tail['y'])] + game.adjacent(game.tail['x'], game.tail['y'])
+    for (_, x, y) in tails:
+      direction = game.move_to_pos(x, y, moves)
       if direction != NO_MOVE:
         break
     if direction == NO_MOVE and not exclude_heads_of_other_snakes:
@@ -215,9 +209,6 @@ def run(data, exclude_heads_of_other_snakes):
       if food_direction != NO_MOVE:
         direction = food_direction
     print 'move_response', 'dir', direction
-
-    if game.tail != previous_tails[game.id]:
-      previous_tails[game.id] = game.tail
 
     return direction
 
