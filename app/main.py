@@ -61,6 +61,7 @@ DELTAS = {
 }
 
 NO_DISTANCE = -1
+NO_MOVE = '?'
 
 class Game(object):
 
@@ -93,7 +94,7 @@ class Game(object):
 
   def distances(self, x, y):
     res = [[NO_DISTANCE for _ in range(self.width)] for _ in range(self.height)]
-    move = [['?' for _ in range(self.width)] for _ in range(self.height)]
+    move = [[NO_MOVE for _ in range(self.width)] for _ in range(self.height)]
     # Flood fill.
     res[y][x] = 0
     deque = collections.deque()
@@ -172,7 +173,9 @@ def move():
     # pprint.pprint(moves)
 
     direction = game.move_to_tail(moves)
-    if False and game.health <= 50:
+    if direction == NO_MOVE:
+      direction = game.move_to_free()
+    if game.health <= 50:
       direction = game.move_to_food(distances, moves)
     return move_response(direction)
 
