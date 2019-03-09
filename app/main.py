@@ -76,6 +76,7 @@ class Game(object):
 
     you = data['you']
     self.id = you['id']
+    self.name = you['name']
     body = you['body']
     self.health = you['health']
     self.head = body[0]
@@ -170,6 +171,13 @@ class Game(object):
     print 'move_to_food', 'mindist', mindist, 'res', res
     return res
 
+def get_min_health(name):
+  res = 100
+  if name == "s2":
+    res = 50
+  print 'get_min_health', 'name', name, 'res', res
+  return res
+
 def run(data, exclude_heads_of_other_snakes):
     print 'exclude_heads_of_other_snakes', exclude_heads_of_other_snakes
 
@@ -204,13 +212,16 @@ def run(data, exclude_heads_of_other_snakes):
         break
     if direction == NO_MOVE and not exclude_heads_of_other_snakes:
       direction = game.move_to_max(distances, moves)
-    if game.health <= 50:
+    if game.health <= get_min_health(game.name):
       food_direction = game.move_to_food(distances, moves, tail_distances)
       if food_direction != NO_MOVE:
         direction = food_direction
     print 'move_response', 'dir', direction
 
     return direction
+
+# TODO
+#  - don't eat if too close to tail
 
 @bottle.post('/move')
 def move():
