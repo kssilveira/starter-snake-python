@@ -92,7 +92,7 @@ class Game(object):
       for part in snake['body'][:-1]:
         self.board[part['y']][part['x']] = 1
       if exclude_heads_of_other_snakes:
-        if snake['id'] != self.id:
+        if snake['id'] != self.id and len(snake['body']) >= len(body):
           head = snake['body'][0]
           for (_, nx, ny) in self.adjacent(head['x'], head['y']):
             self.board[ny][nx] = 1
@@ -210,7 +210,7 @@ def run(data, exclude_heads_of_other_snakes):
       direction = game.move_to_pos(x, y, moves)
       if direction != NO_MOVE:
         break
-    if direction == NO_MOVE and not exclude_heads_of_other_snakes:
+    if direction == NO_MOVE:
       direction = game.move_to_max(distances, moves)
     if game.health <= get_min_health(game.name):
       food_direction = game.move_to_food(distances, moves, tail_distances)
