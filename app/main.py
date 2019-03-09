@@ -69,7 +69,7 @@ previous_tails = {}
 
 class Game(object):
 
-  def __init__(self, data):
+  def __init__(self, data, exclude_heads_of_other_snakes):
     board_data = data['board']
 
     self.height = board_data['height']
@@ -94,6 +94,11 @@ class Game(object):
       # for part in snake['body']:
       for part in snake['body'][:-1]:
         self.board[part['y']][part['x']] = 1
+      if exclude_heads_of_other_snakes:
+        if snake['id'] != self.id:
+          head = snake['body'][0]
+          for (_, nx, ny) in self.adjacent(head['x'], head['y']):
+            self.board[ny][nx] = 1
 
   def adjacent(self, x, y):
     res = []
@@ -168,20 +173,10 @@ class Game(object):
     print 'move_to_food', 'mindist', mindist, 'res', res
     return res
 
-@bottle.post('/move')
-def move():
-    data = bottle.request.json
+def run(data, exclude_heads_of_other_snakes):
+    print 'exclude_heads_of_other_snakes', exclude_heads_of_other_snakes
 
-    """
-    TODO: Using the data from the endpoint request object, your
-            snake AI must choose a direction to move in.
-    """
-    print "move()"
-    # print(json.dumps(data))
-    print 'data'
-    pprint.pprint(data)
-
-    game = Game(data)
+    game = Game(data, exclude_heads_of_other_snakes)
 
     print 'previous_tails', previous_tails
     print 'previous_tails[id]', previous_tails[game.id]
@@ -215,14 +210,27 @@ def move():
       direction = game.move_to_pos(tail['x'], tail['y'], moves)
       if direction != NO_MOVE:
         break
-    if direction == NO_MOVE:
+    if direction == NO_MOVE and not exclude_heads_of_other_snakes:
       direction = game.move_to_max(distances, moves)
     if game.health <= 50:
       food_direction = game.move_to_food(distances, moves, tail_distances)
       if food_direction != NO_MOVE:
         direction = food_direction
     print 'move_response', 'dir', direction
+    return direction
 
+@bottle.post('/move')
+def move():
+    data = bottle.request.json
+
+    print "move()"
+    # print(json.dumps(data))
+    print 'data'
+    pprint.pprint(data)
+
+    direction = run(data, exclude_heads_of_other_snakes=True)
+    if direction == NO_MOVE:
+      direction = run(data, exclude_heads_of_other_snakes=False)
     return move_response(direction)
 
 @bottle.post('/end')
