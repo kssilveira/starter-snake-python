@@ -77,7 +77,8 @@ class Game(object):
     body = you['body']
     self.health = you['health']
     self.head = body[0]
-    for part in body:
+    self.tail = body[-1]
+    for part in body[:-1]:
       self.board[part['y']][part['x']] = 1
 
   def adjacent(self, x, y):
@@ -123,6 +124,13 @@ class Game(object):
     print 'no direction'
     return 'up'
 
+  def move_to_tail(self, moves):
+    x = self.tail['x']
+    y = self.tail['y']
+    res = moves[y][x]
+    print 'x', x, 'y', y, 'res', res
+    return res
+
   def move_to_food(self, distances, moves):
     res = 'up'
     mindist = sys.maxint
@@ -155,19 +163,17 @@ def move():
 
     # import pdb; pdb.set_trace()
 
-    direction = game.move_to_free()
+    distances, moves = game.distances(game.head['x'], game.head['y'])
 
-    if game.health <= 50:
-      distances, moves = game.distances(game.head['x'], game.head['y'])
+    print 'distances'
+    pprint.pprint(distances)
 
-      print 'distances'
-      pprint.pprint(distances)
+    # print 'moves'
+    # pprint.pprint(moves)
 
-      # print 'moves'
-      # pprint.pprint(moves)
-
+    direction = game.move_to_tail(moves)
+    if False and game.health <= 50:
       direction = game.move_to_food(distances, moves)
-
     return move_response(direction)
 
 @bottle.post('/end')
