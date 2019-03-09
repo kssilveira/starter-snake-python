@@ -1,6 +1,8 @@
 import json
 import os
+import pprint
 import random
+
 import bottle
 
 from api import ping_response, start_response, move_response, end_response
@@ -39,12 +41,15 @@ def start():
             initialize your snake state here using the
             request's data if necessary.
     """
+    print "start()"
     print(json.dumps(data))
 
     color = "#00FF00"
 
     return start_response(color)
 
+
+DIRECTIONS = ['up', 'down', 'left', 'right']
 
 @bottle.post('/move')
 def move():
@@ -54,11 +59,33 @@ def move():
     TODO: Using the data from the endpoint request object, your
             snake AI must choose a direction to move in.
     """
+    print "move()"
     print(json.dumps(data))
+    print 'data'
+    pprint.pprint(data)
 
-    directions = ['up', 'down', 'left', 'right']
-    direction = random.choice(directions)
+    board_data = data['board']
+    height = board_data['height']
+    width = board_data['width']
 
+    board = [[0 for _ in range(width)] for _ in range(height)]
+    print 'board'
+    pprint.pprint(board)
+
+    you = data['you']
+    body = you['body']
+    head = body[0]
+    for part in body:
+      board[part['y']][part['x']] = 1
+
+    print 'board'
+    pprint.pprint(board)
+
+    # import pdb; pdb.set_trace()
+    # direction = random.choice(directions)
+
+    direction = 'up'
+    print 'direction', direction
     return move_response(direction)
 
 
@@ -70,6 +97,7 @@ def end():
     TODO: If your snake AI was stateful,
         clean up any stateful objects here.
     """
+    print "end()"
     print(json.dumps(data))
 
     return end_response()
