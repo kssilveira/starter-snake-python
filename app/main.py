@@ -63,6 +63,8 @@ DELTAS = {
 NO_DISTANCE = -1
 NO_MOVE = '?'
 
+DEBUG = False
+
 class Game(object):
 
   def __init__(self, data, exclude_heads_of_other_snakes):
@@ -123,23 +125,10 @@ class Game(object):
       res[y][x] = d
       move[y][x] = m
       move_debug[y][x] = m[0]
-      # print 'x', x, 'y', y, 'd', d
-      # print 'res'
-      # pprint.pprint(res)
-      # import pdb; pdb.set_trace()
       for (_, nx, ny) in self.adjacent(x, y):
         if res[ny][nx] == NO_DISTANCE:
           deque.append((nx, ny, d + 1, m))
     return res, move, move_debug
-
-  def move_to_free(self):
-    res = self.adjacent(self.head['x'], self.head['y'])
-    if len(res) > 0:
-      direction, nx, ny = res[0]
-      print 'direction', direction, 'nx', nx, 'ny', ny
-      return direction
-    print 'no direction'
-    return 'up'
 
   def move_to_pos(self, x, y, moves):
     res = moves[y][x]
@@ -180,32 +169,29 @@ def get_min_health(name):
   print 'get_min_health', 'name', name, 'res', res
   return res
 
+def print_debug(name, val):
+  if DEBUG:
+    print name
+    pprint.pprint(val)
+
 def run(data, exclude_heads_of_other_snakes):
     print 'exclude_heads_of_other_snakes', exclude_heads_of_other_snakes
 
     game = Game(data, exclude_heads_of_other_snakes)
 
-    print 'board'
-    pprint.pprint(game.board)
+    print_debug('board', game.board)
 
     # import pdb; pdb.set_trace()
 
     distances, moves, moves_debug = game.distances(game.head['x'], game.head['y'])
 
-    print 'head_distances'
-    pprint.pprint(distances)
+    print_debug('head_distances', distances)
 
-    print 'moves_debug'
-    pprint.pprint(moves_debug)
+    print_debug('moves_debug', moves_debug)
 
     tail_distances, _, _ = game.distances(game.tail['x'], game.tail['y'])
 
-    print 'tail_distances'
-    pprint.pprint(tail_distances)
-
-    # print 'moves'
-    # pprint.pprint(moves)
-
+    print_debug('tail_distances', tail_distances)
 
     tails = [(_, game.tail['x'], game.tail['y'])] + game.adjacent(game.tail['x'], game.tail['y'])
     for (_, x, y) in tails:
@@ -223,6 +209,7 @@ def run(data, exclude_heads_of_other_snakes):
     return direction
 
 # TODO
+# - avoid food when too close to tail
 # - maybe seek head of smaller snake
 # - maybe predict future position of other snakes
 #   - avoid getting locked
@@ -234,8 +221,10 @@ def move():
 
     print "move()"
     # print(json.dumps(data))
-    print 'data'
-    pprint.pprint(data)
+
+    print_debug('data', data)
+
+    print 'game id', data['game']['id']
 
     direction = run(data, exclude_heads_of_other_snakes=True)
     if direction == NO_MOVE:
