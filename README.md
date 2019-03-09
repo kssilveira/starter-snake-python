@@ -1,12 +1,6 @@
-
-
-
+# Explanation
 
 See explanation about this bot on [link](https://kaue.me/posts/2019/03/09/battlesnake-bot-competition/).
-
-
-
-
 
 # starter-snake-python
 
