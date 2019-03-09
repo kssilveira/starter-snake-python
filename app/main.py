@@ -132,6 +132,16 @@ class Game(object):
     print 'x', x, 'y', y, 'res', res
     return res
 
+  def move_to_max(self, distances, moves):
+    maxdist = -1
+    res = NO_MOVE
+    for x in range(self.width):
+      for y in range(self.height):
+        if distances[y][x] > maxdist:
+          maxdist = distances[y][x]
+          res = moves[y][x]
+    return res
+
   def move_to_food(self, distances, moves):
     res = 'up'
     mindist = sys.maxint
@@ -172,11 +182,14 @@ def move():
     # print 'moves'
     # pprint.pprint(moves)
 
-    direction = game.move_to_tail(moves)
-    if direction == NO_MOVE:
-      direction = game.move_to_free()
-    if game.health <= 50:
-      direction = game.move_to_food(distances, moves)
+    direction = game.move_to_max(distances, moves)
+
+    if False:
+      direction = game.move_to_tail(moves)
+      if direction == NO_MOVE:
+        direction = game.move_to_max(distances, moves)
+      if game.health <= 50:
+        direction = game.move_to_food(distances, moves)
     return move_response(direction)
 
 @bottle.post('/end')
