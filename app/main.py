@@ -87,21 +87,27 @@ class Game(object):
 
   def distances(self, x, y):
     res = [[-1 for _ in range(self.width)] for _ in range(self.height)]
+    move = [['?' for _ in range(self.width)] for _ in range(self.height)]
     # Flood fill.
-    deque = collections.deque([(x, y, 0)])
+    res[y][x] = 0
+    deque = collections.deque()
+    for (m, nx, ny) in self.adjacent(x, y):
+      deque.append((nx, ny, 1, m))
     while deque:
-      (x, y, d) = deque.popleft()
+      (x, y, d, m) = deque.popleft()
       if res[y][x] != -1:
         continue
       res[y][x] = d
+      move[y][x] = m
+      # move[y][x] = m[0]
       # print 'x', x, 'y', y, 'd', d
       # print 'res'
       # pprint.pprint(res)
       # import pdb; pdb.set_trace()
       for (_, nx, ny) in self.adjacent(x, y):
         if res[ny][nx] == -1:
-          deque.append((nx, ny, d + 1))
-    return res
+          deque.append((nx, ny, d + 1, m))
+    return res, move
 
 @bottle.post('/move')
 def move():
@@ -121,15 +127,17 @@ def move():
     print 'board'
     pprint.pprint(game.board)
 
-    distances = game.distances(game.head['x'], game.head['y'])
+    distances, moves = game.distances(game.head['x'], game.head['y'])
 
     print 'distances'
     pprint.pprint(distances)
 
+    # print 'moves'
+    # pprint.pprint(moves)
+
     # import pdb; pdb.set_trace()
 
     res = game.adjacent(game.head['x'], game.head['y'])
-
     if len(res) > 0:
       direction, nx, ny = res[0]
       print 'direction', direction, 'nx', nx, 'ny', ny
