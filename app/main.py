@@ -164,7 +164,7 @@ class Game(object):
 
 def get_min_health(name):
   res = 100
-  if name == "s2":
+  if "health_50" in name:
     res = 50
   print 'get_min_health', 'name', name, 'res', res
   return res
