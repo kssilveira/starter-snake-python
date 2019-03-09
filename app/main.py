@@ -60,6 +60,8 @@ DELTAS = {
   'right': { 'x': +1, 'y':  0, },
 }
 
+NO_DISTANCE = -1
+
 class Game(object):
 
   def __init__(self, data):
@@ -67,6 +69,8 @@ class Game(object):
 
     self.height = board_data['height']
     self.width = board_data['width']
+    self.food = board_data['food']
+
     self.board = [[0 for _ in range(self.width)] for _ in range(self.height)]
 
     you = data['you']
@@ -86,7 +90,7 @@ class Game(object):
     return res
 
   def distances(self, x, y):
-    res = [[-1 for _ in range(self.width)] for _ in range(self.height)]
+    res = [[NO_DISTANCE for _ in range(self.width)] for _ in range(self.height)]
     move = [['?' for _ in range(self.width)] for _ in range(self.height)]
     # Flood fill.
     res[y][x] = 0
@@ -95,7 +99,7 @@ class Game(object):
       deque.append((nx, ny, 1, m))
     while deque:
       (x, y, d, m) = deque.popleft()
-      if res[y][x] != -1:
+      if res[y][x] != NO_DISTANCE:
         continue
       res[y][x] = d
       move[y][x] = m
@@ -105,7 +109,7 @@ class Game(object):
       # pprint.pprint(res)
       # import pdb; pdb.set_trace()
       for (_, nx, ny) in self.adjacent(x, y):
-        if res[ny][nx] == -1:
+        if res[ny][nx] == NO_DISTANCE:
           deque.append((nx, ny, d + 1, m))
     return res, move
 
@@ -117,6 +121,18 @@ class Game(object):
       return direction
     print 'no direction'
     return 'up'
+
+  def move_to_food(self, distances, moves):
+    res = 'up'
+    mindist = sys.maxint
+    for food in self.food:
+      x = food['x']
+      y = food['y']
+      dist = distances[y][x]
+      if dist != NO_DISTANCE and (dist < mindist):
+        mindist = dist
+        res = moves[y][x]
+    return res
 
 @bottle.post('/move')
 def move():
@@ -146,7 +162,7 @@ def move():
 
     # import pdb; pdb.set_trace()
 
-    return move_response(game.move_to_free())
+    return move_response(game.move_to_food(distances, moves))
 
 @bottle.post('/end')
 def end():
