@@ -58,6 +58,23 @@ DELTAS = {
   'right': { 'x': +1, 'y':  0, },
 }
 
+class Game(object):
+
+  def __init__(self, board, width, height):
+    self.board = board
+    self.width = width
+    self.height = height
+
+  def adjacent(self, x, y):
+    res = []
+    for direction in DIRECTIONS:
+      delta = DELTAS[direction]
+      nx = x + delta['x']
+      ny = y + delta['y']
+      if nx >= 0 and nx < self.width and ny >= 0 and ny < self.height and self.board[ny][nx] == 0:
+        res.append((direction, nx, ny))
+    return res
+
 @bottle.post('/move')
 def move():
     data = bottle.request.json
@@ -86,16 +103,45 @@ def move():
     print 'board'
     pprint.pprint(board)
 
+    game = Game(board, width, height)
+
+    # https://en.wikipedia.org/wiki/Floyd%E2%80%93Warshall_algorithm
+
+    distance = [[
+      [[width * height * 999 for _ in range(width)] for _ in range(height)]
+      for _ in range(width)] for _ in range(height)]
+
+    for xs in range(width):
+      for ys in range(height):
+        distance[ys][xs][ys][xs] = 0
+        for (_, nx, ny) in game.adjacent(xs, ys):
+          distance[ys][xs][ny][nx] = 1
+
+    for xm in range(width):
+      for ym in range(height):
+        for xs in range(width):
+          for ys in range(height):
+            for xe in range(width):
+              for ye in range(height):
+                distance[ys][xs][ye][xe] = min(
+                  distance[ys][xs][ye][xe],
+                  distance[ys][xs][ym][xm] + distance[ym][xm][ye][xe])
+
+    # print 'distance'
+    # pprint.pprint(distance)
+
     # import pdb; pdb.set_trace()
     # direction = random.choice(directions)
 
-    for direction in DIRECTIONS:
-      delta = DELTAS[direction]
-      nx = head['x'] + delta['x']
-      ny = head['y'] + delta['y']
+    res = game.adjacent(head['x'], head['y'])
+
+    if len(res) > 0:
+      direction, nx, ny = res[0]
       print 'direction', direction, 'nx', nx, 'ny', ny
-      if nx >= 0 and nx < width and ny >= 0 and ny < height and board[ny][nx] == 0:
-        return move_response(direction)
+      return move_response(direction)
+
+    print 'no direction'
+    return move_response('up')
 
 @bottle.post('/end')
 def end():
