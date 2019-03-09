@@ -109,6 +109,15 @@ class Game(object):
           deque.append((nx, ny, d + 1, m))
     return res, move
 
+  def move_to_free(self):
+    res = self.adjacent(self.head['x'], self.head['y'])
+    if len(res) > 0:
+      direction, nx, ny = res[0]
+      print 'direction', direction, 'nx', nx, 'ny', ny
+      return direction
+    print 'no direction'
+    return 'up'
+
 @bottle.post('/move')
 def move():
     data = bottle.request.json
@@ -137,14 +146,7 @@ def move():
 
     # import pdb; pdb.set_trace()
 
-    res = game.adjacent(game.head['x'], game.head['y'])
-    if len(res) > 0:
-      direction, nx, ny = res[0]
-      print 'direction', direction, 'nx', nx, 'ny', ny
-      return move_response(direction)
-
-    print 'no direction'
-    return move_response('up')
+    return move_response(game.move_to_free())
 
 @bottle.post('/end')
 def end():
