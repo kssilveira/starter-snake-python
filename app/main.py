@@ -165,7 +165,9 @@ class Game(object):
       y = food['y']
       dist = distances[y][x]
       if dist != NO_DISTANCE and (dist < mindist) and (
-        tail_distances[y][x] != NO_DISTANCE or self.health <= 25):
+        (tail_distances[y][x] != NO_DISTANCE and
+         tail_distances[y][x] >= 2)
+         or self.health <= 25):
         mindist = dist
         res = moves[y][x]
     print 'move_to_food', 'mindist', mindist, 'res', res
@@ -221,7 +223,10 @@ def run(data, exclude_heads_of_other_snakes):
     return direction
 
 # TODO
-#  - don't eat if too close to tail
+# - maybe seek head of smaller snake
+# - maybe predict future position of other snakes
+#   - avoid getting locked
+#   - lock others
 
 @bottle.post('/move')
 def move():
