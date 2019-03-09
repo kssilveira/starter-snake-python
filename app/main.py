@@ -46,6 +46,8 @@ def start():
     print "start()"
     print(json.dumps(data))
 
+    previous_tails[data['you']['id']] = []
+
     color = "#00FF00"
 
     return start_response(color)
@@ -63,7 +65,7 @@ DELTAS = {
 NO_DISTANCE = -1
 NO_MOVE = '?'
 
-previous_tails = []
+previous_tails = {}
 
 class Game(object):
 
@@ -77,12 +79,21 @@ class Game(object):
     self.board = [[0 for _ in range(self.width)] for _ in range(self.height)]
 
     you = data['you']
+    self.id = you['id']
     body = you['body']
     self.health = you['health']
     self.head = body[0]
     self.tail = body[-1]
-    for part in body[:-1]:
-      self.board[part['y']][part['x']] = 1
+    # for part in body[:-1]:
+      # self.board[part['y']][part['x']] = 1
+
+    snakes = board_data['snakes']
+    for snake in snakes:
+      # if snake['id'] == you['id']:
+        # continue
+      # for part in snake['body']:
+      for part in snake['body'][:-1]:
+        self.board[part['y']][part['x']] = 1
 
   def adjacent(self, x, y):
     res = []
@@ -170,9 +181,10 @@ def move():
     print 'data'
     pprint.pprint(data)
 
-    print 'previous_tails', previous_tails
-
     game = Game(data)
+
+    print 'previous_tails', previous_tails
+    print 'previous_tails[id]', previous_tails[game.id]
 
     print 'board'
     pprint.pprint(game.board)
@@ -195,12 +207,11 @@ def move():
     # print 'moves'
     # pprint.pprint(moves)
 
-    previous_tails.append(game.tail)
-    if len(previous_tails) > 10:
-      global previous_tails
-      previous_tails = previous_tails[-10:]
+    previous_tails[game.id].append(game.tail)
+    if len(previous_tails[game.id]) > 10:
+      previous_tails[game.id] = previous_tails[game.id][-10:]
 
-    for tail in reversed(previous_tails):
+    for tail in reversed(previous_tails[game.id]):
       direction = game.move_to_pos(tail['x'], tail['y'], moves)
       if direction != NO_MOVE:
         break
