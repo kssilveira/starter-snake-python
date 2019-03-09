@@ -182,14 +182,11 @@ def move():
     # print 'moves'
     # pprint.pprint(moves)
 
-    direction = game.move_to_max(distances, moves)
-
-    if False:
-      direction = game.move_to_tail(moves)
-      if direction == NO_MOVE:
-        direction = game.move_to_max(distances, moves)
-      if game.health <= 50:
-        direction = game.move_to_food(distances, moves)
+    direction = game.move_to_tail(moves)
+    if direction == NO_MOVE:
+      direction = game.move_to_max(distances, moves)
+    if game.health <= 50:
+      direction = game.move_to_food(distances, moves)
     return move_response(direction)
 
 @bottle.post('/end')
