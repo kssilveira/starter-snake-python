@@ -63,6 +63,8 @@ DELTAS = {
 NO_DISTANCE = -1
 NO_MOVE = '?'
 
+previous_tails = []
+
 class Game(object):
 
   def __init__(self, data):
@@ -95,6 +97,7 @@ class Game(object):
   def distances(self, x, y):
     res = [[NO_DISTANCE for _ in range(self.width)] for _ in range(self.height)]
     move = [[NO_MOVE for _ in range(self.width)] for _ in range(self.height)]
+    move_debug = [[NO_MOVE for _ in range(self.width)] for _ in range(self.height)]
     # Flood fill.
     res[y][x] = 0
     deque = collections.deque()
@@ -106,7 +109,7 @@ class Game(object):
         continue
       res[y][x] = d
       move[y][x] = m
-      # move[y][x] = m[0]
+      move_debug[y][x] = m[0]
       # print 'x', x, 'y', y, 'd', d
       # print 'res'
       # pprint.pprint(res)
@@ -114,7 +117,7 @@ class Game(object):
       for (_, nx, ny) in self.adjacent(x, y):
         if res[ny][nx] == NO_DISTANCE:
           deque.append((nx, ny, d + 1, m))
-    return res, move
+    return res, move, move_debug
 
   def move_to_free(self):
     res = self.adjacent(self.head['x'], self.head['y'])
@@ -125,11 +128,9 @@ class Game(object):
     print 'no direction'
     return 'up'
 
-  def move_to_tail(self, moves):
-    x = self.tail['x']
-    y = self.tail['y']
+  def move_to_pos(self, x, y, moves):
     res = moves[y][x]
-    print 'x', x, 'y', y, 'res', res
+    print 'move_to_pos', 'x', x, 'y', y, 'res', res
     return res
 
   def move_to_max(self, distances, moves):
@@ -140,18 +141,20 @@ class Game(object):
         if distances[y][x] > maxdist:
           maxdist = distances[y][x]
           res = moves[y][x]
+    print 'move_to_max', 'maxdist', maxdist, 'res', res
     return res
 
-  def move_to_food(self, distances, moves):
+  def move_to_food(self, distances, moves, tail_distances):
     res = NO_MOVE
     mindist = sys.maxint
     for food in self.food:
       x = food['x']
       y = food['y']
       dist = distances[y][x]
-      if dist != NO_DISTANCE and (dist < mindist):
+      if dist != NO_DISTANCE and (dist < mindist) and tail_distances[y][x] != NO_DISTANCE:
         mindist = dist
         res = moves[y][x]
+    print 'move_to_food', 'mindist', mindist, 'res', res
     return res
 
 @bottle.post('/move')
@@ -163,9 +166,11 @@ def move():
             snake AI must choose a direction to move in.
     """
     print "move()"
-    print(json.dumps(data))
+    # print(json.dumps(data))
     print 'data'
     pprint.pprint(data)
+
+    print 'previous_tails', previous_tails
 
     game = Game(data)
 
@@ -174,21 +179,39 @@ def move():
 
     # import pdb; pdb.set_trace()
 
-    distances, moves = game.distances(game.head['x'], game.head['y'])
+    distances, moves, moves_debug = game.distances(game.head['x'], game.head['y'])
 
-    print 'distances'
+    print 'head_distances'
     pprint.pprint(distances)
+
+    print 'moves_debug'
+    pprint.pprint(moves_debug)
+
+    tail_distances, _, _ = game.distances(game.tail['x'], game.tail['y'])
+
+    print 'tail_distances'
+    pprint.pprint(tail_distances)
 
     # print 'moves'
     # pprint.pprint(moves)
 
-    direction = game.move_to_tail(moves)
+    previous_tails.append(game.tail)
+
+    for tail in reversed(previous_tails):
+      direction = game.move_to_pos(tail['x'], tail['y'], moves)
+      if direction != NO_MOVE:
+        break
     if direction == NO_MOVE:
       direction = game.move_to_max(distances, moves)
     if game.health <= 50:
-      food_direction = game.move_to_food(distances, moves)
+      food_direction = game.move_to_food(distances, moves, tail_distances)
       if food_direction != NO_MOVE:
         direction = food_direction
+    print 'move_response', 'dir', direction
+
+    global previous_tail
+    previous_tail = game.tail
+
     return move_response(direction)
 
 @bottle.post('/end')
