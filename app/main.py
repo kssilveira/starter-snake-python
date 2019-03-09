@@ -51,6 +51,13 @@ def start():
 
 DIRECTIONS = ['up', 'down', 'left', 'right']
 
+DELTAS = {
+  'up'   : { 'x':  0, 'y': -1, },
+  'down' : { 'x':  0, 'y': +1, },
+  'left' : { 'x': -1, 'y':  0, },
+  'right': { 'x': +1, 'y':  0, },
+}
+
 @bottle.post('/move')
 def move():
     data = bottle.request.json
@@ -69,8 +76,6 @@ def move():
     width = board_data['width']
 
     board = [[0 for _ in range(width)] for _ in range(height)]
-    print 'board'
-    pprint.pprint(board)
 
     you = data['you']
     body = you['body']
@@ -84,10 +89,13 @@ def move():
     # import pdb; pdb.set_trace()
     # direction = random.choice(directions)
 
-    direction = 'up'
-    print 'direction', direction
-    return move_response(direction)
-
+    for direction in DIRECTIONS:
+      delta = DELTAS[direction]
+      nx = head['x'] + delta['x']
+      ny = head['y'] + delta['y']
+      print 'direction', direction, 'nx', nx, 'ny', ny
+      if nx >= 0 and nx < width and ny >= 0 and ny < height and board[ny][nx] == 0:
+        return move_response(direction)
 
 @bottle.post('/end')
 def end():
