@@ -105,31 +105,6 @@ def move():
 
     game = Game(board, width, height)
 
-    # https://en.wikipedia.org/wiki/Floyd%E2%80%93Warshall_algorithm
-
-    distance = [[
-      [[width * height * 999 for _ in range(width)] for _ in range(height)]
-      for _ in range(width)] for _ in range(height)]
-
-    for xs in range(width):
-      for ys in range(height):
-        distance[ys][xs][ys][xs] = 0
-        for (_, nx, ny) in game.adjacent(xs, ys):
-          distance[ys][xs][ny][nx] = 1
-
-    for xm in range(width):
-      for ym in range(height):
-        for xs in range(width):
-          for ys in range(height):
-            for xe in range(width):
-              for ye in range(height):
-                distance[ys][xs][ye][xe] = min(
-                  distance[ys][xs][ye][xe],
-                  distance[ys][xs][ym][xm] + distance[ym][xm][ye][xe])
-
-    # print 'distance'
-    # pprint.pprint(distance)
-
     # import pdb; pdb.set_trace()
     # direction = random.choice(directions)
 
